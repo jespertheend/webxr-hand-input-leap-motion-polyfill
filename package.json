@@ -1,0 +1,30 @@
+{
+  "name": "webxr-hand-input-leap-motion-polyfill",
+  "version": "1.0.0",
+  "description": "A polyfill that adds webxr hand input support for the Leap Motion controller.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jespertheend/webxr-hand-input-leap-motion-polyfill.git"
+  },
+  "keywords": [
+    "leap motion",
+    "webxr",
+    "hand input",
+    "hand tracking",
+    "polyfill"
+  ],
+  "author": "Jesper van den Ende",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jespertheend/webxr-hand-input-leap-motion-polyfill/issues"
+  },
+  "homepage": "https://github.com/jespertheend/webxr-hand-input-leap-motion-polyfill#readme",
+  "scripts": {
+    "dev": "concurrently --names 'BUILD,SERVE' -c 'bgBlue.bold,bgGreen.bold' 'node build.js --dev' 'serve -l 5080'"
+  },
+  "dependencies": {
+    "concurrently": "^5.3.0",
+    "rollup": "^2.35.1",
+    "serve": "^11.3.2"
+  }
+}
