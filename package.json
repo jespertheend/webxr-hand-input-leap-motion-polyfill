@@ -24,6 +24,7 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "@rollup/plugin-legacy": "^2.0.0",
     "rollup": "^2.35.1"
   }
 }
