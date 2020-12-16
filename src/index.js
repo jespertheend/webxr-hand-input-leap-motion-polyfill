@@ -1,4 +1,7 @@
-import {Controller} from "./leapjs/leap-1.1.0.min.js";
+import {Controller} from "../leapjs/leap-1.1.0.min.js";
+import PfXRInputSource from "./XRInputSource.js";
+import PfXRSpace from "./XRSpace.js";
+import PfXRPose from "./XRPose.js";
 
 if("xr" in navigator){
 	const original = navigator.xr.requestSession.bind(navigator.xr);
@@ -32,13 +35,25 @@ if("xr" in navigator){
 			controller.loop(frame => {
 
 			});
+			const leftInputSource = new PfXRInputSource();
+			const rightInputSource = new PfXRInputSource();
 			Object.defineProperty(xrSession, "inputSources", {
 				get: _ => {
-					return [];
+					return [leftInputSource, rightInputSource];
 				}
 			});
+
 			console.log(xrSession);
 		}
 		return xrSession;
+	}
+
+	const originalGetPose = XRFrame.prototype.getPose;
+	XRFrame.prototype.getPose = function(space, baseSpace){
+		if(space instanceof PfXRSpace){
+			const pose = new PfXRPose();
+			return pose;
+		}
+		return originalGetPose.apply(this, [space, baseSpace]);
 	}
 }
