@@ -2,6 +2,7 @@ import {Controller} from "../leapjs/leap-1.1.0.min.js";
 import PfXRInputSource from "./XRInputSource.js";
 import PfXRSpace from "./XRSpace.js";
 import PfXRPose from "./XRPose.js";
+import PfXRInputSourcesChangeEvent from "./XRInputSourcesChangeEvent.js";
 
 if("xr" in navigator){
 	const original = navigator.xr.requestSession.bind(navigator.xr);
@@ -43,7 +44,9 @@ if("xr" in navigator){
 				}
 			});
 
-			console.log(xrSession);
+			setTimeout(_ => {
+				xrSession.dispatchEvent(new PfXRInputSourcesChangeEvent("inputsourceschange", {session: xrSession, added: [leftInputSource, rightInputSource], removed: []}));
+			});
 		}
 		return xrSession;
 	}
@@ -55,5 +58,9 @@ if("xr" in navigator){
 			return pose;
 		}
 		return originalGetPose.apply(this, [space, baseSpace]);
+	}
+
+	XRFrame.prototype.getJointPose = function(space, baseSpace){
+		return new PfXRPose();
 	}
 }
