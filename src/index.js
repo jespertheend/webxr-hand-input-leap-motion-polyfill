@@ -172,8 +172,13 @@ if("xr" in navigator){
 			const finger = leapHand[spaceData.fingerName];
 			const bone = finger[spaceData.boneName];
 			const pos = bone.center();
+			const viewerPose = this.getViewerPose(baseSpace);
 			pose = new PfXRJointPose({
-				pos: {x: pos[0]/1000, y: pos[1]/1000, z: pos[2]/1000},
+				pos: {
+					x: pos[0]/1000 + viewerPose.transform.position.x,
+					y: pos[1]/1000 + viewerPose.transform.position.y,
+					z: pos[2]/1000 + viewerPose.transform.position.z
+				},
 			});
 		}else{
 			pose = new PfXRJointPose();
