@@ -39,6 +39,7 @@ if("xr" in navigator){
 
 		if(featureRequested){
 			const controller = new Controller();
+			controller.setOptimizeHMD(true);
 			controller.frameEventName = "deviceFrame";
 			controller.loop(frame => {
 				for(const hand of frame.hands){
@@ -193,12 +194,11 @@ if("xr" in navigator){
 			const headMat = viewerPose.transform.matrix;
 			glMatrix.mat4.multiply(boneMat, headMat, boneMat);
 			const pos = glMatrix.mat4.getTranslation([], boneMat);
-			// console.log(pos);
 			pose = new PfXRJointPose({
 				pos: {
 					x: pos[0],
 					y: pos[1],
-					z: pos[2]
+					z: pos[2],
 				},
 			});
 		}else{
