@@ -173,7 +173,7 @@ if("xr" in navigator){
 		let pose;
 		const bone = leapBoneFromjointIndex(spaceData.jointIndex, leapHand);
 		if(leapHand && bone){
-			const boneMat = bone.matrix();
+			const boneMat = bone.matrix().slice();
 
 			//convert to column-major order
 			glMatrix.mat4.transpose(boneMat, boneMat);
