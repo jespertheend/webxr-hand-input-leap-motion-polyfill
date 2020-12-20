@@ -1,4 +1,4 @@
-import {Controller} from "../leapjs/leap-1.1.0.min.js";
+import {Controller, glMatrix} from "../leapjs/leap-1.1.0.js";
 import PfXRInputSource from "./XRInputSource.js";
 import PfXRSpace from "./XRSpace.js";
 import PfXRPose from "./XRPose.js";
@@ -171,13 +171,32 @@ if("xr" in navigator){
 		if(leapHand && spaceData.fingerName){
 			const finger = leapHand[spaceData.fingerName];
 			const bone = finger[spaceData.boneName];
-			const pos = bone.center();
+			const boneMat = bone.matrix();
+
+			//convert to column-major order
+			glMatrix.mat4.transpose(boneMat, boneMat);
+
+			//leap matrices are in mm
+			boneMat[12] *= 0.001;
+			boneMat[13] *= 0.001;
+			boneMat[14] *= 0.001;
+
+			//rotate
+			const rot = glMatrix.mat4.create();
+			glMatrix.mat4.rotateX(rot, rot, -Math.PI*0.5);
+			glMatrix.mat4.rotateY(rot, rot, Math.PI);
+			glMatrix.mat4.multiply(boneMat, rot, boneMat);
+
 			const viewerPose = this.getViewerPose(baseSpace);
+			const headMat = viewerPose.transform.matrix;
+			glMatrix.mat4.multiply(boneMat, headMat, boneMat);
+			const pos = glMatrix.mat4.getTranslation([], boneMat);
+			// console.log(pos);
 			pose = new PfXRJointPose({
 				pos: {
-					x: pos[0]/1000 + viewerPose.transform.position.x,
-					y: pos[1]/1000 + viewerPose.transform.position.y,
-					z: pos[2]/1000 + viewerPose.transform.position.z
+					x: pos[0],
+					y: pos[1],
+					z: pos[2]
 				},
 			});
 		}else{

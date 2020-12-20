@@ -7,8 +7,9 @@ const legacy = require("@rollup/plugin-legacy");
 	const bundle = await rollup.rollup({
 		input: "src/index.js",
 		plugins: [legacy({
-			"./leapjs/leap-1.1.0.min.js": {
+			"./leapjs/leap-1.1.0.js": {
 				Controller: "Leap.Controller",
+				glMatrix: "Leap.glMatrix",
 			},
 		})],
 	});
