@@ -85,7 +85,7 @@ if("xr" in navigator){
 						if(jointSpace == inputSourceJointSpace){
 							data = {
 								handedness: inputSource.handedness,
-								...jointIndexToLeapLocation(i),
+								jointIndex: i,
 							}
 							break;
 						}
@@ -98,62 +98,65 @@ if("xr" in navigator){
 		return data;
 	}
 
-	function jointIndexToLeapLocation(jointIndex){
+	function leapBoneFromjointIndex(jointIndex, leapHand){
+		if(!leapHand) return null;
+
 		switch(jointIndex){
-			// case PfXRHand.WRIST:
+			case PfXRHand.WRIST:
+				return leapHand.arm;
 
 			case PfXRHand.THUMB_METACARPAL:
-				return {fingerName: "thumb", boneName: "metacarpal"};
+				return leapHand.thumb.metacarpal;
 			case PfXRHand.THUMB_PHALANX_PROXIMAL:
-				return {fingerName: "thumb", boneName: "proximal"};
+				return leapHand.thumb.proximal;
 			case PfXRHand.THUMB_PHALANX_DISTAL:
-				return {fingerName: "thumb", boneName: "distal"};
+				return leapHand.thumb.distal;
 			case PfXRHand.THUMB_PHALANX_TIP:
-				return {fingerName: "thumb", boneName: "distal"};
+				return leapHand.thumb.distal;
 
 			case PfXRHand.INDEX_METACARPAL:
-				return {fingerName: "indexFinger", boneName: "metacarpal"};
+				return leapHand.indexFinger.metacarpal;
 			case PfXRHand.INDEX_PHALANX_PROXIMAL:
-				return {fingerName: "indexFinger", boneName: "proximal"};
+				return leapHand.indexFinger.proximal;
 			case PfXRHand.INDEX_PHALANX_INTERMEDIATE:
-				return {fingerName: "indexFinger", boneName: "medial"};
+				return leapHand.indexFinger.medial;
 			case PfXRHand.INDEX_PHALANX_DISTAL:
-				return {fingerName: "indexFinger", boneName: "distal"};
+				return leapHand.indexFinger.distal;
 			case PfXRHand.INDEX_PHALANX_TIP:
-				return {fingerName: "indexFinger", boneName: "distal"};
+				return leapHand.indexFinger.distal;
 
 			case PfXRHand.MIDDLE_METACARPAL:
-				return {fingerName: "middleFinger", boneName: "metacarpal"};
+				return leapHand.middleFinger.metacarpal;
 			case PfXRHand.MIDDLE_PHALANX_PROXIMAL:
-				return {fingerName: "middleFinger", boneName: "proximal"};
+				return leapHand.middleFinger.proximal;
 			case PfXRHand.MIDDLE_PHALANX_INTERMEDIATE:
-				return {fingerName: "middleFinger", boneName: "medial"};
+				return leapHand.middleFinger.medial;
 			case PfXRHand.MIDDLE_PHALANX_DISTAL:
-				return {fingerName: "middleFinger", boneName: "distal"};
+				return leapHand.middleFinger.distal;
 			case PfXRHand.MIDDLE_PHALANX_TIP:
-				return {fingerName: "middleFinger", boneName: "distal"};
+				return leapHand.middleFinger.distal;
 
 			case PfXRHand.RING_METACARPAL:
-				return {fingerName: "ringFinger", boneName: "metacarpal"};
+				return leapHand.ringFinger.metacarpal;
 			case PfXRHand.RING_PHALANX_PROXIMAL:
-				return {fingerName: "ringFinger", boneName: "proximal"};
+				return leapHand.ringFinger.proximal;
 			case PfXRHand.RING_PHALANX_INTERMEDIATE:
-				return {fingerName: "ringFinger", boneName: "medial"};
+				return leapHand.ringFinger.medial;
 			case PfXRHand.RING_PHALANX_DISTAL:
-				return {fingerName: "ringFinger", boneName: "distal"};
+				return leapHand.ringFinger.distal;
 			case PfXRHand.RING_PHALANX_TIP:
-				return {fingerName: "ringFinger", boneName: "distal"};
+				return leapHand.ringFinger.distal;
 
 			case PfXRHand.LITTLE_METACARPAL:
-				return {fingerName: "pinky", boneName: "metacarpal"};
+				return leapHand.pinky.metacarpal;
 			case PfXRHand.LITTLE_PHALANX_PROXIMAL:
-				return {fingerName: "pinky", boneName: "proximal"};
+				return leapHand.pinky.proximal;
 			case PfXRHand.LITTLE_PHALANX_INTERMEDIATE:
-				return {fingerName: "pinky", boneName: "medial"};
+				return leapHand.pinky.medial;
 			case PfXRHand.LITTLE_PHALANX_DISTAL:
-				return {fingerName: "pinky", boneName: "distal"};
+				return leapHand.pinky.distal;
 			case PfXRHand.LITTLE_PHALANX_TIP:
-				return {fingerName: "pinky", boneName: "distal"};
+				return leapHand.pinky.distal;
 		}
 	}
 
@@ -168,9 +171,8 @@ if("xr" in navigator){
 			}
 		}
 		let pose;
-		if(leapHand && spaceData.fingerName){
-			const finger = leapHand[spaceData.fingerName];
-			const bone = finger[spaceData.boneName];
+		const bone = leapBoneFromjointIndex(spaceData.jointIndex, leapHand);
+		if(leapHand && bone){
 			const boneMat = bone.matrix();
 
 			//convert to column-major order
