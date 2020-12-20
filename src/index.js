@@ -104,60 +104,60 @@ if("xr" in navigator){
 
 		switch(jointIndex){
 			case PfXRHand.WRIST:
-				return leapHand.arm;
+				return leapHand.arm.nextJoint.slice();
 
 			case PfXRHand.THUMB_METACARPAL:
-				return leapHand.thumb.metacarpal;
+				return leapHand.thumb.proximal.prevJoint.slice();
 			case PfXRHand.THUMB_PHALANX_PROXIMAL:
-				return leapHand.thumb.proximal;
+				return leapHand.thumb.medial.prevJoint.slice();
 			case PfXRHand.THUMB_PHALANX_DISTAL:
-				return leapHand.thumb.distal;
+				return leapHand.thumb.distal.prevJoint.slice();
 			case PfXRHand.THUMB_PHALANX_TIP:
-				return leapHand.thumb.distal;
+				return leapHand.thumb.distal.nextJoint.slice();
 
 			case PfXRHand.INDEX_METACARPAL:
-				return leapHand.indexFinger.metacarpal;
+				return leapHand.indexFinger.metacarpal.prevJoint.slice();
 			case PfXRHand.INDEX_PHALANX_PROXIMAL:
-				return leapHand.indexFinger.proximal;
+				return leapHand.indexFinger.proximal.prevJoint.slice();
 			case PfXRHand.INDEX_PHALANX_INTERMEDIATE:
-				return leapHand.indexFinger.medial;
+				return leapHand.indexFinger.medial.prevJoint.slice();
 			case PfXRHand.INDEX_PHALANX_DISTAL:
-				return leapHand.indexFinger.distal;
+				return leapHand.indexFinger.distal.prevJoint.slice();
 			case PfXRHand.INDEX_PHALANX_TIP:
-				return leapHand.indexFinger.distal;
+				return leapHand.indexFinger.distal.nextJoint.slice();
 
 			case PfXRHand.MIDDLE_METACARPAL:
-				return leapHand.middleFinger.metacarpal;
+				return leapHand.middleFinger.metacarpal.prevJoint.slice();
 			case PfXRHand.MIDDLE_PHALANX_PROXIMAL:
-				return leapHand.middleFinger.proximal;
+				return leapHand.middleFinger.proximal.prevJoint.slice();
 			case PfXRHand.MIDDLE_PHALANX_INTERMEDIATE:
-				return leapHand.middleFinger.medial;
+				return leapHand.middleFinger.medial.prevJoint.slice();
 			case PfXRHand.MIDDLE_PHALANX_DISTAL:
-				return leapHand.middleFinger.distal;
+				return leapHand.middleFinger.distal.prevJoint.slice();
 			case PfXRHand.MIDDLE_PHALANX_TIP:
-				return leapHand.middleFinger.distal;
+				return leapHand.middleFinger.distal.nextJoint.slice();
 
 			case PfXRHand.RING_METACARPAL:
-				return leapHand.ringFinger.metacarpal;
+				return leapHand.ringFinger.metacarpal.prevJoint.slice();
 			case PfXRHand.RING_PHALANX_PROXIMAL:
-				return leapHand.ringFinger.proximal;
+				return leapHand.ringFinger.proximal.prevJoint.slice();
 			case PfXRHand.RING_PHALANX_INTERMEDIATE:
-				return leapHand.ringFinger.medial;
+				return leapHand.ringFinger.medial.prevJoint.slice();
 			case PfXRHand.RING_PHALANX_DISTAL:
-				return leapHand.ringFinger.distal;
+				return leapHand.ringFinger.distal.prevJoint.slice();
 			case PfXRHand.RING_PHALANX_TIP:
-				return leapHand.ringFinger.distal;
+				return leapHand.ringFinger.distal.nextJoint.slice();
 
 			case PfXRHand.LITTLE_METACARPAL:
-				return leapHand.pinky.metacarpal;
+				return leapHand.pinky.metacarpal.prevJoint.slice();
 			case PfXRHand.LITTLE_PHALANX_PROXIMAL:
-				return leapHand.pinky.proximal;
+				return leapHand.pinky.proximal.prevJoint.slice();
 			case PfXRHand.LITTLE_PHALANX_INTERMEDIATE:
-				return leapHand.pinky.medial;
+				return leapHand.pinky.medial.prevJoint.slice();
 			case PfXRHand.LITTLE_PHALANX_DISTAL:
-				return leapHand.pinky.distal;
+				return leapHand.pinky.distal.prevJoint.slice();
 			case PfXRHand.LITTLE_PHALANX_TIP:
-				return leapHand.pinky.distal;
+				return leapHand.pinky.distal.nextJoint.slice();
 		}
 	}
 
@@ -172,33 +172,28 @@ if("xr" in navigator){
 			}
 		}
 		let pose;
-		const bone = leapBoneFromjointIndex(spaceData.jointIndex, leapHand);
-		if(leapHand && bone){
-			const boneMat = bone.matrix().slice();
+		const jointPos = leapBoneFromjointIndex(spaceData.jointIndex, leapHand);
+		if(leapHand && jointPos){
 
-			//convert to column-major order
-			glMatrix.mat4.transpose(boneMat, boneMat);
-
-			//leap matrices are in mm
-			boneMat[12] *= 0.001;
-			boneMat[13] *= 0.001;
-			boneMat[14] *= 0.001;
+			//leap positions are in mm
+			jointPos[0] *= 0.001;
+			jointPos[1] *= 0.001;
+			jointPos[2] *= 0.001;
 
 			//rotate
 			const rot = glMatrix.mat4.create();
 			glMatrix.mat4.rotateX(rot, rot, -Math.PI*0.5);
 			glMatrix.mat4.rotateY(rot, rot, Math.PI);
-			glMatrix.mat4.multiply(boneMat, rot, boneMat);
+			glMatrix.vec3.transformMat4(jointPos, jointPos, rot);
 
 			const viewerPose = this.getViewerPose(baseSpace);
 			const headMat = viewerPose.transform.matrix;
-			glMatrix.mat4.multiply(boneMat, headMat, boneMat);
-			const pos = glMatrix.mat4.getTranslation([], boneMat);
+			glMatrix.vec3.transformMat4(jointPos, jointPos, headMat);
 			pose = new PfXRJointPose({
 				pos: {
-					x: pos[0],
-					y: pos[1],
-					z: pos[2],
+					x: jointPos[0],
+					y: jointPos[1],
+					z: jointPos[2],
 				},
 			});
 		}else{
