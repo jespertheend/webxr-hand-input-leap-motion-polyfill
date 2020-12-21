@@ -99,65 +99,65 @@ if("xr" in navigator){
 		return data;
 	}
 
-	function leapBoneFromjointIndex(jointIndex, leapHand){
+	function leapJointMatrixFromWebXrIndex(jointIndex, leapHand){
 		if(!leapHand) return null;
 
 		switch(jointIndex){
 			case PfXRHand.WRIST:
-				return leapHand.arm.nextJoint.slice();
+				return leapHand.arm.matrix();
 
 			case PfXRHand.THUMB_METACARPAL:
-				return leapHand.thumb.proximal.prevJoint.slice();
+				return leapHand.thumb.proximal.matrix();
 			case PfXRHand.THUMB_PHALANX_PROXIMAL:
-				return leapHand.thumb.medial.prevJoint.slice();
+				return leapHand.thumb.medial.matrix();
 			case PfXRHand.THUMB_PHALANX_DISTAL:
-				return leapHand.thumb.distal.prevJoint.slice();
+				return leapHand.thumb.distal.matrix();
 			case PfXRHand.THUMB_PHALANX_TIP:
-				return leapHand.thumb.distal.nextJoint.slice();
+				return leapHand.thumb.distal.matrix();
 
 			case PfXRHand.INDEX_METACARPAL:
-				return leapHand.indexFinger.metacarpal.prevJoint.slice();
+				return leapHand.indexFinger.metacarpal.matrix();
 			case PfXRHand.INDEX_PHALANX_PROXIMAL:
-				return leapHand.indexFinger.proximal.prevJoint.slice();
+				return leapHand.indexFinger.proximal.matrix();
 			case PfXRHand.INDEX_PHALANX_INTERMEDIATE:
-				return leapHand.indexFinger.medial.prevJoint.slice();
+				return leapHand.indexFinger.medial.matrix();
 			case PfXRHand.INDEX_PHALANX_DISTAL:
-				return leapHand.indexFinger.distal.prevJoint.slice();
+				return leapHand.indexFinger.distal.matrix();
 			case PfXRHand.INDEX_PHALANX_TIP:
-				return leapHand.indexFinger.distal.nextJoint.slice();
+				return leapHand.indexFinger.distal.matrix();
 
 			case PfXRHand.MIDDLE_METACARPAL:
-				return leapHand.middleFinger.metacarpal.prevJoint.slice();
+				return leapHand.middleFinger.metacarpal.matrix();
 			case PfXRHand.MIDDLE_PHALANX_PROXIMAL:
-				return leapHand.middleFinger.proximal.prevJoint.slice();
+				return leapHand.middleFinger.proximal.matrix();
 			case PfXRHand.MIDDLE_PHALANX_INTERMEDIATE:
-				return leapHand.middleFinger.medial.prevJoint.slice();
+				return leapHand.middleFinger.medial.matrix();
 			case PfXRHand.MIDDLE_PHALANX_DISTAL:
-				return leapHand.middleFinger.distal.prevJoint.slice();
+				return leapHand.middleFinger.distal.matrix();
 			case PfXRHand.MIDDLE_PHALANX_TIP:
-				return leapHand.middleFinger.distal.nextJoint.slice();
+				return leapHand.middleFinger.distal.matrix();
 
 			case PfXRHand.RING_METACARPAL:
-				return leapHand.ringFinger.metacarpal.prevJoint.slice();
+				return leapHand.ringFinger.metacarpal.matrix();
 			case PfXRHand.RING_PHALANX_PROXIMAL:
-				return leapHand.ringFinger.proximal.prevJoint.slice();
+				return leapHand.ringFinger.proximal.matrix();
 			case PfXRHand.RING_PHALANX_INTERMEDIATE:
-				return leapHand.ringFinger.medial.prevJoint.slice();
+				return leapHand.ringFinger.medial.matrix();
 			case PfXRHand.RING_PHALANX_DISTAL:
-				return leapHand.ringFinger.distal.prevJoint.slice();
+				return leapHand.ringFinger.distal.matrix();
 			case PfXRHand.RING_PHALANX_TIP:
-				return leapHand.ringFinger.distal.nextJoint.slice();
+				return leapHand.ringFinger.distal.matrix();
 
 			case PfXRHand.LITTLE_METACARPAL:
-				return leapHand.pinky.metacarpal.prevJoint.slice();
+				return leapHand.pinky.metacarpal.matrix();
 			case PfXRHand.LITTLE_PHALANX_PROXIMAL:
-				return leapHand.pinky.proximal.prevJoint.slice();
+				return leapHand.pinky.proximal.matrix();
 			case PfXRHand.LITTLE_PHALANX_INTERMEDIATE:
-				return leapHand.pinky.medial.prevJoint.slice();
+				return leapHand.pinky.medial.matrix();
 			case PfXRHand.LITTLE_PHALANX_DISTAL:
-				return leapHand.pinky.distal.prevJoint.slice();
+				return leapHand.pinky.distal.matrix();
 			case PfXRHand.LITTLE_PHALANX_TIP:
-				return leapHand.pinky.distal.nextJoint.slice();
+				return leapHand.pinky.distal.matrix();
 		}
 	}
 
@@ -172,28 +172,58 @@ if("xr" in navigator){
 			}
 		}
 		let pose;
-		const jointPos = leapBoneFromjointIndex(spaceData.jointIndex, leapHand);
-		if(leapHand && jointPos){
+		let jointMatrix = leapJointMatrixFromWebXrIndex(spaceData.jointIndex, leapHand);
+		if(leapHand && jointMatrix){
+			jointMatrix = jointMatrix.slice();
+			glMatrix.mat4.transpose(jointMatrix, jointMatrix);
 
 			//leap positions are in mm
-			jointPos[0] *= 0.001;
-			jointPos[1] *= 0.001;
-			jointPos[2] *= 0.001;
+			jointMatrix[12] *= 0.001;
+			jointMatrix[13] *= 0.001;
+			jointMatrix[14] *= 0.001;
 
-			//rotate
+
+			//rotate leap motion space
 			const rot = glMatrix.mat4.create();
 			glMatrix.mat4.rotateX(rot, rot, -Math.PI*0.5);
 			glMatrix.mat4.rotateY(rot, rot, Math.PI);
-			glMatrix.vec3.transformMat4(jointPos, jointPos, rot);
+			glMatrix.mat4.multiply(jointMatrix, rot, jointMatrix);
 
+			//move leap motion space in front of headset
 			const viewerPose = this.getViewerPose(baseSpace);
 			const headMat = viewerPose.transform.matrix;
-			glMatrix.vec3.transformMat4(jointPos, jointPos, headMat);
+
+			glMatrix.mat4.multiply(jointMatrix, headMat, jointMatrix);
+			const matJointPos = glMatrix.mat4.getTranslation([], jointMatrix);
+
+			//extract orientation from matrix
+			const jointMatrix3 = glMatrix.mat3.fromMat4([], jointMatrix);
+			const orientation = glMatrix.quat.fromMat3([], jointMatrix3);
+
+			// glMatrix.quat.invert(orientation, orientation);
+			// glMatrix.quat.rotateY(orientation, orientation, Math.cos(Date.now()*0.001)*Math.PI);
+			glMatrix.quat.rotateY(orientation, orientation, -Math.PI*0.5);
+			// glMatrix.quat.rotateX(orientation, orientation, -Math.PI);
+
+			const headRot = [
+				viewerPose.transform.orientation.x,
+				viewerPose.transform.orientation.y,
+				viewerPose.transform.orientation.z,
+				viewerPose.transform.orientation.w
+			];
+			glMatrix.quat.multiply(orientation, headRot, orientation);
+
 			pose = new PfXRJointPose({
 				pos: {
-					x: jointPos[0],
-					y: jointPos[1],
-					z: jointPos[2],
+					x: matJointPos[0],
+					y: matJointPos[1],
+					z: matJointPos[2],
+				},
+				dir: {
+					x: orientation[0],
+					y: orientation[1],
+					z: -orientation[2],
+					w: -orientation[3],
 				},
 			});
 		}else{
