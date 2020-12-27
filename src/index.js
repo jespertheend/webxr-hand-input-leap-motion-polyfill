@@ -104,7 +104,7 @@ if("xr" in navigator){
 
 		switch(jointIndex){
 			case PfXRHand.WRIST:
-				return leapHand.arm.matrix();
+				return leapHand.middleFinger.metacarpal.matrix();
 
 			case PfXRHand.THUMB_METACARPAL:
 				return leapHand.thumb.proximal.matrix();
@@ -177,10 +177,33 @@ if("xr" in navigator){
 			jointMatrix = jointMatrix.slice();
 			glMatrix.mat4.transpose(jointMatrix, jointMatrix);
 
+			const viewerPose = this.getViewerPose(baseSpace);
+
 			//leap positions are in mm
 			jointMatrix[12] *= 0.001;
 			jointMatrix[13] *= 0.001;
 			jointMatrix[14] *= 0.001;
+
+
+			//extract orientation from matrix
+			const jointMatrix3 = glMatrix.mat3.fromMat4([], jointMatrix);
+			const orientation = glMatrix.quat.fromMat3([], jointMatrix3);
+
+			orientation[0] *= -1;
+			orientation[1] *= -1;
+			orientation[2] *= -1;
+
+			glMatrix.quat.rotateY(orientation, orientation, Math.PI*0.5);
+
+			const headRot = [
+				viewerPose.transform.orientation.x,
+				viewerPose.transform.orientation.y,
+				viewerPose.transform.orientation.z,
+				viewerPose.transform.orientation.w
+			];
+			glMatrix.quat.rotateX(headRot, headRot, 1.5 * Math.PI);
+			glMatrix.quat.rotateY(headRot, headRot, Math.PI);
+			glMatrix.quat.multiply(orientation, headRot, orientation);
 
 
 			//rotate leap motion space
@@ -190,28 +213,9 @@ if("xr" in navigator){
 			glMatrix.mat4.multiply(jointMatrix, rot, jointMatrix);
 
 			//move leap motion space in front of headset
-			const viewerPose = this.getViewerPose(baseSpace);
 			const headMat = viewerPose.transform.matrix;
-
 			glMatrix.mat4.multiply(jointMatrix, headMat, jointMatrix);
 			const matJointPos = glMatrix.mat4.getTranslation([], jointMatrix);
-
-			//extract orientation from matrix
-			const jointMatrix3 = glMatrix.mat3.fromMat4([], jointMatrix);
-			const orientation = glMatrix.quat.fromMat3([], jointMatrix3);
-
-			// glMatrix.quat.invert(orientation, orientation);
-			// glMatrix.quat.rotateY(orientation, orientation, Math.cos(Date.now()*0.001)*Math.PI);
-			glMatrix.quat.rotateY(orientation, orientation, -Math.PI*0.5);
-			// glMatrix.quat.rotateX(orientation, orientation, -Math.PI);
-
-			const headRot = [
-				viewerPose.transform.orientation.x,
-				viewerPose.transform.orientation.y,
-				viewerPose.transform.orientation.z,
-				viewerPose.transform.orientation.w
-			];
-			glMatrix.quat.multiply(orientation, headRot, orientation);
 
 			pose = new PfXRJointPose({
 				pos: {
@@ -222,8 +226,8 @@ if("xr" in navigator){
 				dir: {
 					x: orientation[0],
 					y: orientation[1],
-					z: -orientation[2],
-					w: -orientation[3],
+					z: orientation[2],
+					w: orientation[3],
 				},
 			});
 		}else{
